@@ -43,6 +43,15 @@ function initStats() {
 }
 initStats();
 
+// Instanciação dos Efeitos Sonoros
+const soundTrilha = new Audio("aud/trilha.ogg");
+soundTrilha.loop = true;
+soundTrilha.volume = 0.4;
+
+const soundAcerto = new Audio("aud/acerto.ogg");
+const soundErro = new Audio("aud/erro.ogg");
+const soundFlash = new Audio("aud/flash.ogg");
+
 let gameQuestions = [];
 let currentQuestionIdx = 0;
 let webcamStream = null;
@@ -50,10 +59,10 @@ let currentRenderedOptions = [];
 let executionState = "INTRO"; // INTRO, PLAYING, PHOTO, GAMEOVER, VICTORY
 
 const bgPalettes = [
-    "linear-gradient(135deg, rgba(0, 229, 255, 0.18), rgba(179, 82, 255, 0.18))",
-    "linear-gradient(135deg, rgba(255, 42, 141, 0.18), rgba(255, 123, 0, 0.18))",
-    "linear-gradient(135deg, rgba(0, 255, 170, 0.18), rgba(0, 229, 255, 0.18))",
-    "linear-gradient(135deg, rgba(179, 82, 255, 0.18), rgba(255, 56, 56, 0.18))"
+    "linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(192, 132, 252, 0.2))",
+    "linear-gradient(135deg, rgba(255, 0, 127, 0.2), rgba(255, 94, 0, 0.2))",
+    "linear-gradient(135deg, rgba(0, 255, 196, 0.2), rgba(0, 240, 255, 0.2))",
+    "linear-gradient(135deg, rgba(192, 132, 252, 0.2), rgba(255, 51, 85, 0.2))"
 ];
 
 function mutateBackgroundBackground() {
@@ -61,7 +70,7 @@ function mutateBackgroundBackground() {
     const chosenPalette = bgPalettes[Math.floor(Math.random() * bgPalettes.length)];
     cubes.forEach(cube => {
         cube.style.background = chosenPalette;
-        cube.style.animationDuration = `${Math.floor(Math.random() * 8) + 8}s`;
+        cube.style.animationDuration = `${Math.floor(Math.random() * 6) + 7}s`;
     });
 }
 
@@ -73,6 +82,10 @@ function startGame() {
     document.getElementById("quiz-screen").classList.remove("hidden");
     document.getElementById("leaderboard-section").classList.remove("hidden");
     
+    // Toca a trilha sonora em looping ao iniciar
+    soundTrilha.currentTime = 0;
+    soundTrilha.play().catch(e => console.log("Áudio bloqueado pelo navegador até interação:", e));
+
     gameQuestions = [...quizDatabase].sort(() => Math.random() - 0.5);
     currentQuestionIdx = 0;
     
@@ -134,12 +147,20 @@ function evaluateInput(keyNumber) {
         const selectedAnswerText = currentRenderedOptions[keyNumber - 1];
 
         if (selectedAnswerText === currentQ.correct) {
+            // Toca som de acerto
+            soundAcerto.currentTime = 0;
+            soundAcerto.play().catch(e => {});
+
             statsMap[currentQ.id].hits += 1;
             localStorage.setItem("quiz_olhosdagua_stats", JSON.stringify(statsMap));
             
             currentQuestionIdx++;
             loadNextQuestion();
         } else {
+            // Toca som de erro
+            soundErro.currentTime = 0;
+            soundErro.play().catch(e => {});
+
             statsMap[currentQ.id].misses += 1;
             localStorage.setItem("quiz_olhosdagua_stats", JSON.stringify(statsMap));
             
@@ -155,7 +176,6 @@ window.addEventListener("keydown", (e) => {
     }
 });
 
-/* Tratamento de Erro: Se tiver acerto >= 1, tira foto ANTES do GameOver */
 function handleAnswerError() {
     document.getElementById("quiz-screen").classList.add("hidden");
 
@@ -166,7 +186,6 @@ function handleAnswerError() {
     }
 }
 
-/* Captura de Foto antes de ir para a tela de Fim de Jogo */
 function triggerPhotoCaptureFlow() {
     executionState = "PHOTO";
     document.getElementById("victory-screen").classList.remove("hidden");
@@ -225,6 +244,10 @@ function startAutomaticCountdown() {
 }
 
 function captureFinalSnapshot() {
+    // Toca o som do flash no momento exato da captura
+    soundFlash.currentTime = 0;
+    soundFlash.play().catch(e => {});
+
     const video = document.getElementById("webcam");
     const canvas = document.getElementById("capture-canvas");
     const context = canvas.getContext("2d");
@@ -247,7 +270,7 @@ function captureFinalSnapshot() {
     }
 }
 
-/* Exibe a Tela 💥 FIM DE JOGO por 15 segundos */
+/* Tempo da tela final reduzido para 5 segundos */
 function triggerGameOverScreen() {
     executionState = "GAMEOVER";
     mutateBackgroundBackground();
@@ -263,7 +286,7 @@ function triggerGameOverScreen() {
     cooldownFill.style.width = "100%";
     
     setTimeout(() => {
-        cooldownFill.style.transition = "width 15s linear";
+        cooldownFill.style.transition = "width 5s linear";
         cooldownFill.style.width = "0%";
     }, 50);
 
@@ -271,7 +294,7 @@ function triggerGameOverScreen() {
         if (executionState === "GAMEOVER") {
             returnToMenu();
         }
-    }, 15050);
+    }, 5050);
 }
 
 function displayQuestionStats() {
@@ -303,7 +326,6 @@ function displayQuestionStats() {
     });
 }
 
-// Salva o resultado e mantêm o Top 5 com mais acertos (Mínimo de 1 acerto)
 function saveAutomatedWinner(photoData, finalScore) {
     if (finalScore < 1) return;
 
@@ -331,6 +353,9 @@ function saveAutomatedWinner(photoData, finalScore) {
 
 function returnToMenu() {
     executionState = "INTRO";
+    // Para a trilha sonora ao retornar ao menu (opcional, caso queira que continue, basta remover esta linha)
+    soundTrilha.pause();
+    
     closeWebcam();
     document.getElementById("gameover-screen").classList.add("hidden");
     document.getElementById("victory-screen").classList.add("hidden");
@@ -348,7 +373,7 @@ function displayLeaderboard(targetContainerId) {
     container.innerHTML = "";
 
     if (localRecords.length === 0) {
-        container.innerHTML = `<p style="grid-column: span 5; color: #64748b; text-align: center; width: 100%;">Nenhum campeão registrado ainda. Acerte pelo menos 1 questão para entrar no ranking!</p>`;
+        container.innerHTML = `<p style="grid-column: span 5; color: #94a3b8; text-align: center; width: 100%;">Nenhum campeão registrado ainda. Acerte pelo menos 1 questão para entrar no ranking!</p>`;
         return;
     }
 
