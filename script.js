@@ -21,7 +21,7 @@ const quizDatabase = [
     { id: 20, title: "Questão 20", text: "Em qual alternativa a palavra está escrita corretamente?", options: ["cotidiano", "cotidianno", "cotidíano", "cotidiâno"], correct: "cotidiano" },
     { id: 21, title: "Questão 21", text: "Assinale a forma correta do adjetivo relacionado à África e à cultura brasileira.", options: ["afrobrasileiro", "afro-brasileiro", "afro brasileiro", "afro-brasileíro"], correct: "afro-brasileiro" },
     { id: 22, title: "Questão 22", text: "Qual alternativa apresenta a grafia correta do termo que se refere a quem descende de africanos?", options: ["afrodescendente", "afro-descendente", "afro descendente", "afrodessendente"], correct: "afrodescendente" },
-    { id: 23, title: "Questão 23", text: "Marque a forma correta.", options: ["antiracista", "anti-racista", "antirracista", "anti racista"], correct: "antirracista" },
+    { id: 23, title: "Questão 23", text: "Marque a forma correta.", options: ["antiracista", "anti-racista", "antirracista", "anti racista"], correct: "antiracista" },
     { id: 24, title: "Questão 24", text: "Qual palavra está corretamente acentuada?", options: ["raízes", "raizes", "raízês", "raíses"], correct: "raízes" },
     { id: 25, title: "Questão 25", text: "Assinale a alternativa em que a palavra está escrita corretamente.", options: ["quilombola", "quilonbola", "quilômbola", "quilombóla"], correct: "quilombola" },
     { id: 26, title: "Questão 26", text: "Qual alternativa apresenta a grafia correta?", options: ["empoderamento", "empoderamênto", "empoderamemto", "empoderamemto"], correct: "empoderamento" },
@@ -58,6 +58,10 @@ let webcamStream = null;
 let currentRenderedOptions = [];
 let executionState = "INTRO"; // INTRO, PLAYING, PHOTO, GAMEOVER, VICTORY
 
+// Variáveis do Temporizador por Questão (1 minuto)
+let questionTimer = null;
+let timeLeft = 60;
+
 const bgPalettes = [
     "linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(192, 132, 252, 0.2))",
     "linear-gradient(135deg, rgba(255, 0, 127, 0.2), rgba(255, 94, 0, 0.2))",
@@ -82,7 +86,6 @@ function startGame() {
     document.getElementById("quiz-screen").classList.remove("hidden");
     document.getElementById("leaderboard-section").classList.remove("hidden");
     
-    // Toca a trilha sonora em looping ao iniciar
     soundTrilha.currentTime = 0;
     soundTrilha.play().catch(e => console.log("Áudio bloqueado pelo navegador até interação:", e));
 
@@ -97,6 +100,7 @@ function loadNextQuestion() {
     mutateBackgroundBackground();
     
     if (currentQuestionIdx >= gameQuestions.length) {
+        stopQuestionTimer();
         triggerVictoryFlow();
         return;
     }
@@ -132,6 +136,66 @@ function loadNextQuestion() {
         `;
         grid.appendChild(card);
     });
+
+    // Inicia o cronômetro de 1 minuto para esta questão
+    startQuestionTimer();
+}
+
+// Funções de gerenciamento do temporizador
+function startQuestionTimer() {
+    stopQuestionTimer();
+    timeLeft = 60;
+    
+    // Atualiza ou cria o elemento visual do timer no cabeçalho ou badge se desejar
+    updateTimerDisplay(timeLeft);
+
+    questionTimer = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay(timeLeft);
+
+        if (timeLeft <= 0) {
+            stopQuestionTimer();
+            // Tempo esgotado conta como erro automático!
+            handleTimeoutError();
+        }
+    }, 1000);
+}
+
+function stopQuestionTimer() {
+    if (questionTimer) {
+        clearInterval(questionTimer);
+        questionTimer = null;
+    }
+}
+
+function updateTimerDisplay(seconds) {
+    let timerBadge = document.getElementById("timer-badge");
+    if (!timerBadge) {
+        const header = document.querySelector(".game-header");
+        if (header) {
+            timerBadge = document.createElement("div");
+            timerBadge.id = "timer-badge";
+            timerBadge.className = "badge";
+            timerBadge.style.background = "linear-gradient(135deg, #ff5e00, #ff3355)";
+            header.insertBefore(timerBadge, header.firstChild);
+        }
+    }
+    if (timerBadge) {
+        timerBadge.innerText = `⏱️ ${seconds}s`;
+    }
+}
+
+function handleTimeoutError() {
+    if (executionState !== "PLAYING") return;
+
+    const currentQ = gameQuestions[currentQuestionIdx];
+    soundErro.currentTime = 0;
+    soundErro.play().catch(e => {});
+
+    statsMap[currentQ.id].misses += 1;
+    localStorage.setItem("quiz_olhosdagua_stats", JSON.stringify(statsMap));
+
+    handleAnswerError();
 }
 
 function evaluateInput(keyNumber) {
@@ -143,11 +207,13 @@ function evaluateInput(keyNumber) {
     if (executionState === "PLAYING" && keyNumber >= 1 && keyNumber <= currentRenderedOptions.length) {
         if (currentQuestionIdx >= gameQuestions.length) return;
 
+        // Para o timer assim que responder
+        stopQuestionTimer();
+
         const currentQ = gameQuestions[currentQuestionIdx];
         const selectedAnswerText = currentRenderedOptions[keyNumber - 1];
 
         if (selectedAnswerText === currentQ.correct) {
-            // Toca som de acerto
             soundAcerto.currentTime = 0;
             soundAcerto.play().catch(e => {});
 
@@ -157,7 +223,6 @@ function evaluateInput(keyNumber) {
             currentQuestionIdx++;
             loadNextQuestion();
         } else {
-            // Toca som de erro
             soundErro.currentTime = 0;
             soundErro.play().catch(e => {});
 
@@ -177,6 +242,7 @@ window.addEventListener("keydown", (e) => {
 });
 
 function handleAnswerError() {
+    stopQuestionTimer();
     document.getElementById("quiz-screen").classList.add("hidden");
 
     if (currentQuestionIdx >= 1) {
@@ -207,6 +273,7 @@ function triggerPhotoCaptureFlow() {
 
 function triggerVictoryFlow() {
     executionState = "VICTORY";
+    stopQuestionTimer();
     document.getElementById("quiz-screen").classList.add("hidden");
     document.getElementById("victory-screen").classList.remove("hidden");
 
@@ -244,7 +311,6 @@ function startAutomaticCountdown() {
 }
 
 function captureFinalSnapshot() {
-    // Toca o som do flash no momento exato da captura
     soundFlash.currentTime = 0;
     soundFlash.play().catch(e => {});
 
@@ -270,7 +336,6 @@ function captureFinalSnapshot() {
     }
 }
 
-/* Tempo da tela final reduzido para 5 segundos */
 function triggerGameOverScreen() {
     executionState = "GAMEOVER";
     mutateBackgroundBackground();
@@ -353,7 +418,7 @@ function saveAutomatedWinner(photoData, finalScore) {
 
 function returnToMenu() {
     executionState = "INTRO";
-    // Para a trilha sonora ao retornar ao menu (opcional, caso queira que continue, basta remover esta linha)
+    stopQuestionTimer();
     soundTrilha.pause();
     
     closeWebcam();
