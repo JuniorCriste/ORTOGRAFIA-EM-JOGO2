@@ -53,10 +53,10 @@ let currentRenderedOptions = [];
 let executionState = "INTRO"; // INTRO, PLAYING, GAMEOVER, VICTORY
 
 const bgPalettes = [
-    "linear-gradient(135deg, rgba(0, 210, 255, 0.2), rgba(157, 78, 221, 0.2))",
-    "linear-gradient(135deg, rgba(255, 0, 127, 0.2), rgba(255, 107, 53, 0.2))",
-    "linear-gradient(135deg, rgba(0, 255, 135, 0.2), rgba(0, 210, 255, 0.2))",
-    "linear-gradient(135deg, rgba(157, 78, 221, 0.2), rgba(255, 51, 51, 0.2))"
+    "linear-gradient(135deg, rgba(0, 229, 255, 0.18), rgba(179, 82, 255, 0.18))",
+    "linear-gradient(135deg, rgba(255, 42, 141, 0.18), rgba(255, 123, 0, 0.18))",
+    "linear-gradient(135deg, rgba(0, 255, 170, 0.18), rgba(0, 229, 255, 0.18))",
+    "linear-gradient(135deg, rgba(179, 82, 255, 0.18), rgba(255, 56, 56, 0.18))"
 ];
 
 function mutateBackgroundBackground() {
