@@ -1,4 +1,3 @@
-// Banco de Dados Completo - 30 Questões da Obra Olhos D'água
 const quizDatabase = [
     { id: 1, title: "Questão 1", text: "Assinale a grafia correta da palavra que nomeia a transmissão de histórias, saberes e tradições entre gerações.", options: ["ancestrálidade", "ancestralidade", "ancestrabilidade", "ancesstralidade"], correct: "ancestralidade" },
     { id: 2, title: "Questão 2", text: "Qual alternativa apresenta a escrita correta?", options: ["resitência", "rezistência", "resistência", "rezistênsia"], correct: "resistência" },
@@ -32,10 +31,8 @@ const quizDatabase = [
     { id: 30, title: "Questão 30", text: "A palavra “d’água”, presente no título da obra, contém acento. Qual outra palavra também deve receber acento agudo?", options: ["memoria", "ancestralidade", "violencia", "infância"], correct: "infância" }
 ];
 
-// Mapeamento de Estatísticas de Acertos e Erros mantido no localStorage
 let statsMap = JSON.parse(localStorage.getItem("quiz_olhosdagua_stats")) || {};
 
-// Inicializa a estrutura de estatísticas se ainda não existir
 function initStats() {
     quizDatabase.forEach(q => {
         if (!statsMap[q.id]) {
@@ -50,7 +47,7 @@ let gameQuestions = [];
 let currentQuestionIdx = 0;
 let webcamStream = null;
 let currentRenderedOptions = [];
-let executionState = "INTRO"; // INTRO, PLAYING, GAMEOVER, VICTORY
+let executionState = "INTRO"; 
 
 const bgPalettes = [
     "linear-gradient(135deg, rgba(0, 229, 255, 0.18), rgba(179, 82, 255, 0.18))",
@@ -76,7 +73,6 @@ function startGame() {
     document.getElementById("quiz-screen").classList.remove("hidden");
     document.getElementById("leaderboard-section").classList.remove("hidden");
     
-    // Embaralha as perguntas aleatoriamente mantendo os títulos originais
     gameQuestions = [...quizDatabase].sort(() => Math.random() - 0.5);
     currentQuestionIdx = 0;
     
@@ -99,7 +95,6 @@ function loadNextQuestion() {
 
     const currentQ = gameQuestions[currentQuestionIdx];
     
-    // Mantém o título exato ("Questão X") vindo do banco de dados
     document.getElementById("level-badge").innerText = currentQ.title;
     document.getElementById("progress-text").innerText = `Progresso: ${currentQuestionIdx + 1} / ${gameQuestions.length}`;
     
@@ -107,7 +102,6 @@ function loadNextQuestion() {
     document.getElementById("progress-fill").style.width = `${percentage}%`;
     document.getElementById("question-text").innerText = currentQ.text;
     
-    // Embaralha as alternativas dinamicamente
     currentRenderedOptions = [...currentQ.options].sort(() => Math.random() - 0.5);
     
     const grid = document.getElementById("options-grid");
@@ -140,14 +134,12 @@ function evaluateInput(keyNumber) {
         const selectedAnswerText = currentRenderedOptions[keyNumber - 1];
 
         if (selectedAnswerText === currentQ.correct) {
-            // Registra acerto para a estatística
             statsMap[currentQ.id].hits += 1;
             localStorage.setItem("quiz_olhosdagua_stats", JSON.stringify(statsMap));
             
             currentQuestionIdx++;
             loadNextQuestion();
         } else {
-            // Registra erro para a estatística
             statsMap[currentQ.id].misses += 1;
             localStorage.setItem("quiz_olhosdagua_stats", JSON.stringify(statsMap));
             
@@ -163,7 +155,6 @@ window.addEventListener("keydown", (e) => {
     }
 });
 
-/* Fluxo de GameOver com Timer de 15 Segundos */
 function triggerDefeatFlow() {
     executionState = "GAMEOVER";
     mutateBackgroundBackground();
@@ -172,20 +163,17 @@ function triggerDefeatFlow() {
     document.getElementById("leaderboard-section").classList.add("hidden");
     document.getElementById("gameover-screen").classList.remove("hidden");
     
-    // Renderiza a lista ranqueada por acertos x erros
     displayQuestionStats();
 
     const cooldownFill = document.getElementById("defeat-cooldown");
     cooldownFill.style.transition = "none";
     cooldownFill.style.width = "100%";
     
-    // Anima a barra durante 15 segundos
     setTimeout(() => {
         cooldownFill.style.transition = "width 15s linear";
         cooldownFill.style.width = "0%";
     }, 50);
 
-    // Retorna após 15 segundos (15000 ms + 50ms offset)
     setTimeout(() => {
         if (executionState === "GAMEOVER") {
             returnToMenu();
@@ -193,14 +181,12 @@ function triggerDefeatFlow() {
     }, 15050);
 }
 
-// Renderiza todas as 30 questões ranqueadas pelas mais acertadas
 function displayQuestionStats() {
     const container = document.getElementById("stats-question-list");
     if (!container) return;
     
     const statsArray = Object.values(statsMap);
 
-    // Ordenação: 1º quem mais acertou, 2º critério quem menos errou
     statsArray.sort((a, b) => {
         if (b.hits !== a.hits) {
             return b.hits - a.hits;
@@ -236,7 +222,7 @@ function triggerVictoryFlow() {
             startAutomaticCountdown();
         })
         .catch(() => {
-            setTimeout(() => { saveAutomatedWinner(null); }, 4000);
+            setTimeout(() => { saveAutomatedWinner(30); }, 4000);
         });
 }
 
@@ -270,10 +256,16 @@ function captureFinalSnapshot() {
     context.setTransform(1, 0, 0, 1, 0, 0);
 
     const snapshotBase64 = canvas.toDataURL("image/png");
-    saveAutomatedWinner(snapshotBase64);
+    saveAutomatedWinner(snapshotBase64, currentQuestionIdx);
 }
 
-function saveAutomatedWinner(photoData) {
+// Salva e filtra o ranking para as 5 maiores pontuações (mínimo de 1 acerto)
+function saveAutomatedWinner(photoData, finalScore = 30) {
+    if (finalScore < 1) {
+        returnToMenu();
+        return;
+    }
+
     const fallbackAvatar = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='55' height='55' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%2300ff87'/><text x='50%' y='65%' font-family='sans-serif' font-size='10' fill='black' text-anchor='middle'>⭐</text></svg>`;
     const localRecords = JSON.parse(localStorage.getItem("pro_players_db")) || [];
     
@@ -282,14 +274,20 @@ function saveAutomatedWinner(photoData) {
 
     const newWinner = {
         name: computedName,
+        score: finalScore,
         photo: photoData || fallbackAvatar,
         timestamp: new Date().toLocaleDateString('pt-BR')
     };
 
-    localRecords.unshift(newWinner);
-    if (localRecords.length > 10) localRecords.pop();
+    localRecords.push(newWinner);
 
-    localStorage.setItem("pro_players_db", JSON.stringify(localRecords));
+    // Ordena da maior pontuação para a menor
+    localRecords.sort((a, b) => b.score - a.score);
+
+    // Mantém estritamente apenas as 5 maiores pontuações
+    const topFiveRecords = localRecords.slice(0, 5);
+
+    localStorage.setItem("pro_players_db", JSON.stringify(topFiveRecords));
     displayLeaderboard("leaderboard-list-main");
 
     setTimeout(() => {
@@ -316,18 +314,19 @@ function displayLeaderboard(targetContainerId) {
     container.innerHTML = "";
 
     if (localRecords.length === 0) {
-        container.innerHTML = `<p style="grid-column: span 2; color: #64748b; text-align: center; width: 100%;">Nenhum campeão registrado ainda nesta máquina.</p>`;
+        container.innerHTML = `<p style="grid-column: span 5; color: #64748b; text-align: center; width: 100%;">Nenhum campeão registrado ainda nesta máquina. Acerte pelo menos 1 questão para entrar no ranking!</p>`;
         return;
     }
 
-    localRecords.forEach(item => {
+    localRecords.forEach((item, index) => {
         const slot = document.createElement("div");
         slot.className = "player-slot";
         slot.innerHTML = `
             <img src="${item.photo}" alt="Avatar">
             <div class="player-meta">
-                <h4>${item.name}</h4>
-                <span>Concluiu em ${item.timestamp}</span>
+                <h4>${index + 1}º - ${item.name}</h4>
+                <span>⭐ ${item.score} Acertos</span>
+                <small>${item.timestamp}</small>
             </div>
         `;
         container.appendChild(slot);
