@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ortografia em Jogo - Desafio Bullying!</title>
+    <title>ORTOGRAFIA EM JOGO: Olhos D’água</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,67 +16,74 @@
         <div class="cube"></div>
     </div>
 
+    <!-- Tela Inicial / Play -->
     <div id="loading-screen" class="screen">
         <div class="loader-content view-card">
-            <h1 class="game-title neon-blue-text">Ortografia em Jogo</h1>
-            <h2 class="game-subtitle neon-pink-text">Desafio Bullying!</h2>
+            <h1 class="game-title neon-blue-text">ORTOGRAFIA EM JOGO</h1>
+            <h2 class="game-subtitle neon-pink-text">Olhos D’água (Obra de Conceição Evaristo)</h2>
             
-            <div class="intro-box">
-                <p>O bullying é uma forma de violência com atitudes repetitivas de humilhação, intimidação ou exclusão. Combater isso exige respeito, empatia e responsabilidade coletiva. Mostre que você é fera na ortografia e contra o bullying!</p>
+            <div class="book-cover-container">
+                <img src="img/olhosdagua.png" alt="Capa Olhos D'água" class="book-cover-img">
             </div>
 
-            <div class="start-action-box">
+            <div class="intro-box">
+                <p><strong>Olhos d’Água</strong> é uma coletânea de contos da escritora brasileira Conceição Evaristo que apresenta histórias marcadas pelas experiências, memórias e lutas da população negra, especialmente das mulheres negras.</p>
+                <p>Por meio de personagens que enfrentam a pobreza, o racismo, a violência, as desigualdades sociais e os desafios da vida cotidiana, a autora dá voz a sujeitos frequentemente invisibilizados pela sociedade. Com uma escrita sensível e profunda, a obra aborda temas como ancestralidade, maternidade, identidade, resistência, afeto e pertencimento.</p>
+                <p>O livro convida o leitor a refletir sobre as desigualdades raciais e sociais, reconhecendo a força das memórias, das histórias e das experiências humanas.</p>
+                <p><strong>Mensagem central:</strong> a obra valoriza as vozes, as vivências e a resistência da população negra, mostrando que contar histórias também é uma forma de preservar a memória e lutar contra o silenciamento.</p>
+                <p><strong>Objetivo:</strong> reconhecer a grafia correta de palavras relacionadas à obra “Olhos d’Água” e a temas presentes na literatura de Conceição Evaristo, como memória, identidade, ancestralidade, desigualdade, resistência e experiências das mulheres negras.</p>
+                <p><strong>Orientações:</strong> leia cada questão com atenção e escolha a alternativa correta.</p>
+            </div>
+
+            <div class="start-action-box" id="start-btn-trigger" onclick="startGame()">
                 <span class="key-indicator large">1</span>
-                <span class="action-text">Iniciar Ortografia em Jogo</span>
+                <span class="action-text">COMEÇAR A JOGAR</span>
             </div>
         </div>
     </div>
 
+    <!-- Tela do Quiz -->
     <div id="quiz-screen" class="screen hidden">
         <div class="game-container view-card" id="quiz-card">
             <div class="game-header">
-                <div class="badge" id="level-badge">Nível Básico</div>
+                <div class="badge" id="level-badge">Questão 1</div>
                 <div class="progress-container">
-                    <span id="progress-text">Questão 1 / 20</span>
+                    <span id="progress-text">Progresso: 1 / 30</span>
                     <div class="progress-bar"><div id="progress-fill"></div></div>
                 </div>
             </div>
 
             <div class="question-box" id="question-text">Carregando pergunta...</div>
             
-            <div class="options-grid">
-                <div class="option-card" id="opt1">
-                    <span class="key-indicator indicator-orange">1</span>
-                    <span class="opt-text" id="opt1-text">Opção 1</span>
-                </div>
-                <div class="option-card" id="opt2">
-                    <span class="key-indicator indicator-purple">2</span>
-                    <span class="opt-text" id="opt2-text">Opção 2</span>
-                </div>
+            <div class="options-grid" id="options-grid">
+                <!-- As opções serão geradas dinamicamente -->
             </div>
 
-            <p class="tip-text">Pressione as teclas [1] ou [2] do teclado para responder!</p>
+            <p class="tip-text">Pressione as teclas numéricas [1], [2], [3] ou [4] do teclado para responder!</p>
         </div>
     </div>
 
+    <!-- Tela de Game Over / Relatório Final -->
     <div id="gameover-screen" class="screen hidden">
         <div class="gameover-container view-card pop-animation">
-            <h1 class="neon-red-text structural-title">💥 GAME OVER</h1>
-            <p class="defeat-msg">Não foi dessa vez! A ortografia precisa estar impecável para vencer o bullying.</p>
+            <h1 class="neon-red-text structural-title">💥 FIM DE JOGO</h1>
+            <p class="defeat-msg">Confira o seu desempenho por questão nesta rodada:</p>
             <div class="cooldown-bar-wrapper"><div class="cooldown-bar-fill" id="defeat-cooldown"></div></div>
             
-            <div class="leaderboard-fullscreen">
-                <h3>🥇 Últimos Pró Players</h3>
-                <div class="players-grid large-slots" id="leaderboard-list-defeat">
-                    </div>
+            <div class="stats-fullscreen">
+                <h3>📊 Desempenho por Questão (Mais acertadas → Mais erradas)</h3>
+                <div class="stats-list" id="stats-question-list">
+                    <!-- Lista de acertos/erros inserida via JS -->
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Tela de Vitória -->
     <div id="victory-screen" class="screen hidden">
         <div class="victory-container view-card pop-animation">
-            <h1 class="neon-green-text structural-title">🏆 VOCÊ VENCEU!</h1>
-            <p class="victory-msg">Sua ortografia é excelente e você disse NÃO ao bullying!</p>
+            <h1 class="neon-green-text structural-title">🏆 PARABÉNS!</h1>
+            <p class="victory-msg">Você concluiu todas as questões da obra Olhos D’água!</p>
             
             <div id="camera-area">
                 <div id="countdown-overlay" class="hidden">5</div>
@@ -85,17 +92,17 @@
             </div>
 
             <div id="pose-instruction">
-                <h2 class="neon-gold-text">PREPARE SUA POSE DE PRO PLAYER!</h2>
+                <h2 class="neon-gold-text">PREPARE SUA POSE DE LEITOR PRO!</h2>
                 <p class="sub-pose-text">A foto será tirada automaticamente em instantes...</p>
             </div>
         </div>
     </div>
 
+    <!-- Ranking de Campeões -->
     <div id="leaderboard-section" class="hidden">
         <div class="leaderboard-container view-card">
-            <h3>🎮 Últimos Pró Players</h3>
-            <div class="players-grid" id="leaderboard-list-main">
-                </div>
+            <h3>🎮 Últimos Leitores Pro</h3>
+            <div class="players-grid" id="leaderboard-list-main"></div>
         </div>
     </div>
 
