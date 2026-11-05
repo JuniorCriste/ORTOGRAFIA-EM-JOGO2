@@ -12,7 +12,7 @@ const quizDatabase = [
     { id: 11, title: "Questão 11", text: "Assinale a forma correta do plural de “mulher”.", options: ["mulhers", "mulheris", "mulheres", "mulherezes"], correct: "mulheres" },
     { id: 12, title: "Questão 12", text: "Qual alternativa apresenta corretamente o plural de “cidadão”?", options: ["cidadões", "cidadães", "cidadãos", "cidadans"], correct: "cidadãos" },
     { id: 13, title: "Questão 13", text: "Marque a palavra escrita corretamente.", options: ["discriminação", "descriminação", "discriminaçâo", "discriminaçao"], correct: "discriminação" },
-    { id: 14, title: "Questão 14", text: "Qual é a grafia correta do termo que se refere à valorização da população negra e de sua história?", options: ["negritude", "negritúde", "negritude", "negritudi"], correct: "negritude" },
+    { id: 14, title: "Questão 14", text: "Qual é a grafia correta do termo que se refere à valorização da população negra e de sua história?", options: ["negritude", "negritúde", "nigritude", "negritudi"], correct: "negritude" },
     { id: 15, title: "Questão 15", text: "Assinale a alternativa em que todas as palavras estão corretas.", options: ["esperança, pobreza, sobrevivência", "esperansa, pobreza, sobrevivênçia", "esperança, pobresa, sobrevivencia", "esperânça, pobreza, sobrevivência"], correct: "esperança, pobreza, sobrevivência" },
     { id: 16, title: "Questão 16", text: "Qual palavra está escrita corretamente?", options: ["acolhimento", "acolimento", "acollhimento", "acolhimênto"], correct: "acolhimento" },
     { id: 17, title: "Questão 17", text: "Marque a alternativa correta quanto ao uso de “s” e “z”.", options: ["beleza e pobreza", "belesa e pobreza", "beleza e pobresa", "belesa e pobresa"], correct: "beleza e pobreza" },
