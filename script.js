@@ -47,7 +47,7 @@ let gameQuestions = [];
 let currentQuestionIdx = 0;
 let webcamStream = null;
 let currentRenderedOptions = [];
-let executionState = "INTRO"; 
+let executionState = "INTRO"; // INTRO, PLAYING, PHOTO, GAMEOVER, VICTORY
 
 const bgPalettes = [
     "linear-gradient(135deg, rgba(0, 229, 255, 0.18), rgba(179, 82, 255, 0.18))",
@@ -143,7 +143,7 @@ function evaluateInput(keyNumber) {
             statsMap[currentQ.id].misses += 1;
             localStorage.setItem("quiz_olhosdagua_stats", JSON.stringify(statsMap));
             
-            triggerDefeatFlow();
+            handleAnswerError();
         }
     }
 }
@@ -155,7 +155,100 @@ window.addEventListener("keydown", (e) => {
     }
 });
 
-function triggerDefeatFlow() {
+/* Tratamento de Erro: Se tiver acerto >= 1, tira foto ANTES do GameOver */
+function handleAnswerError() {
+    document.getElementById("quiz-screen").classList.add("hidden");
+
+    if (currentQuestionIdx >= 1) {
+        triggerPhotoCaptureFlow();
+    } else {
+        triggerGameOverScreen();
+    }
+}
+
+/* Captura de Foto antes de ir para a tela de Fim de Jogo */
+function triggerPhotoCaptureFlow() {
+    executionState = "PHOTO";
+    document.getElementById("victory-screen").classList.remove("hidden");
+
+    navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } })
+        .then(stream => {
+            document.getElementById("webcam").srcObject = stream;
+            webcamStream = stream;
+            startAutomaticCountdown();
+        })
+        .catch(() => {
+            setTimeout(() => { 
+                saveAutomatedWinner(null, currentQuestionIdx); 
+                document.getElementById("victory-screen").classList.add("hidden");
+                triggerGameOverScreen();
+            }, 3000);
+        });
+}
+
+function triggerVictoryFlow() {
+    executionState = "VICTORY";
+    document.getElementById("quiz-screen").classList.add("hidden");
+    document.getElementById("victory-screen").classList.remove("hidden");
+
+    navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } })
+        .then(stream => {
+            document.getElementById("webcam").srcObject = stream;
+            webcamStream = stream;
+            startAutomaticCountdown();
+        })
+        .catch(() => {
+            setTimeout(() => { 
+                saveAutomatedWinner(null, 30); 
+                returnToMenu();
+            }, 3000);
+        });
+}
+
+function startAutomaticCountdown() {
+    const overlay = document.getElementById("countdown-overlay");
+    overlay.classList.remove("hidden");
+
+    let counter = 5;
+    overlay.innerText = counter;
+
+    const interval = setInterval(() => {
+        counter--;
+        if (counter > 0) {
+            overlay.innerText = counter;
+        } else {
+            clearInterval(interval);
+            overlay.classList.add("hidden");
+            captureFinalSnapshot();
+        }
+    }, 1000);
+}
+
+function captureFinalSnapshot() {
+    const video = document.getElementById("webcam");
+    const canvas = document.getElementById("capture-canvas");
+    const context = canvas.getContext("2d");
+
+    context.translate(canvas.width, 0);
+    context.scale(-1, 1);
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    context.setTransform(1, 0, 0, 1, 0, 0);
+
+    const snapshotBase64 = canvas.toDataURL("image/png");
+    saveAutomatedWinner(snapshotBase64, currentQuestionIdx);
+
+    closeWebcam();
+    document.getElementById("victory-screen").classList.add("hidden");
+
+    if (executionState === "VICTORY") {
+        returnToMenu();
+    } else {
+        triggerGameOverScreen();
+    }
+}
+
+/* Exibe a Tela 💥 FIM DE JOGO por 15 segundos */
+function triggerGameOverScreen() {
     executionState = "GAMEOVER";
     mutateBackgroundBackground();
     
@@ -210,61 +303,9 @@ function displayQuestionStats() {
     });
 }
 
-function triggerVictoryFlow() {
-    executionState = "VICTORY";
-    document.getElementById("quiz-screen").classList.add("hidden");
-    document.getElementById("victory-screen").classList.remove("hidden");
-
-    navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } })
-        .then(stream => {
-            document.getElementById("webcam").srcObject = stream;
-            webcamStream = stream;
-            startAutomaticCountdown();
-        })
-        .catch(() => {
-            setTimeout(() => { saveAutomatedWinner(30); }, 4000);
-        });
-}
-
-function startAutomaticCountdown() {
-    const overlay = document.getElementById("countdown-overlay");
-    overlay.classList.remove("hidden");
-
-    let counter = 5;
-    overlay.innerText = counter;
-
-    const interval = setInterval(() => {
-        counter--;
-        if (counter > 0) {
-            overlay.innerText = counter;
-        } else {
-            clearInterval(interval);
-            overlay.classList.add("hidden");
-            captureFinalSnapshot();
-        }
-    }, 1000);
-}
-
-function captureFinalSnapshot() {
-    const video = document.getElementById("webcam");
-    const canvas = document.getElementById("capture-canvas");
-    const context = canvas.getContext("2d");
-
-    context.translate(canvas.width, 0);
-    context.scale(-1, 1);
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    context.setTransform(1, 0, 0, 1, 0, 0);
-
-    const snapshotBase64 = canvas.toDataURL("image/png");
-    saveAutomatedWinner(snapshotBase64, currentQuestionIdx);
-}
-
-// Salva e filtra o ranking para as 5 maiores pontuações (mínimo de 1 acerto)
-function saveAutomatedWinner(photoData, finalScore = 30) {
-    if (finalScore < 1) {
-        returnToMenu();
-        return;
-    }
+// Salva o resultado e mantêm o Top 5 com mais acertos (Mínimo de 1 acerto)
+function saveAutomatedWinner(photoData, finalScore) {
+    if (finalScore < 1) return;
 
     const fallbackAvatar = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='55' height='55' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%2300ff87'/><text x='50%' y='65%' font-family='sans-serif' font-size='10' fill='black' text-anchor='middle'>⭐</text></svg>`;
     const localRecords = JSON.parse(localStorage.getItem("pro_players_db")) || [];
@@ -280,19 +321,12 @@ function saveAutomatedWinner(photoData, finalScore = 30) {
     };
 
     localRecords.push(newWinner);
-
-    // Ordena da maior pontuação para a menor
     localRecords.sort((a, b) => b.score - a.score);
 
-    // Mantém estritamente apenas as 5 maiores pontuações
     const topFiveRecords = localRecords.slice(0, 5);
 
     localStorage.setItem("pro_players_db", JSON.stringify(topFiveRecords));
     displayLeaderboard("leaderboard-list-main");
-
-    setTimeout(() => {
-        returnToMenu();
-    }, 3000);
 }
 
 function returnToMenu() {
@@ -314,7 +348,7 @@ function displayLeaderboard(targetContainerId) {
     container.innerHTML = "";
 
     if (localRecords.length === 0) {
-        container.innerHTML = `<p style="grid-column: span 5; color: #64748b; text-align: center; width: 100%;">Nenhum campeão registrado ainda nesta máquina. Acerte pelo menos 1 questão para entrar no ranking!</p>`;
+        container.innerHTML = `<p style="grid-column: span 5; color: #64748b; text-align: center; width: 100%;">Nenhum campeão registrado ainda. Acerte pelo menos 1 questão para entrar no ranking!</p>`;
         return;
     }
 
