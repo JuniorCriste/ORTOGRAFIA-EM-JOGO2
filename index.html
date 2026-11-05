@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ortografia em Jogo - Desafio Bullying!</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="animated-bg" id="bg-dynamic">
+        <div class="cube"></div>
+        <div class="cube"></div>
+        <div class="cube"></div>
+        <div class="cube"></div>
+        <div class="cube"></div>
+    </div>
+
+    <div id="loading-screen" class="screen">
+        <div class="loader-content view-card">
+            <h1 class="game-title neon-blue-text">Ortografia em Jogo</h1>
+            <h2 class="game-subtitle neon-pink-text">Desafio Bullying!</h2>
+            
+            <div class="intro-box">
+                <p>O bullying é uma forma de violência com atitudes repetitivas de humilhação, intimidação ou exclusão. Combater isso exige respeito, empatia e responsabilidade coletiva. Mostre que você é fera na ortografia e contra o bullying!</p>
+            </div>
+
+            <div class="start-action-box">
+                <span class="key-indicator large">1</span>
+                <span class="action-text">Iniciar Ortografia em Jogo</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="quiz-screen" class="screen hidden">
+        <div class="game-container view-card" id="quiz-card">
+            <div class="game-header">
+                <div class="badge" id="level-badge">Nível Básico</div>
+                <div class="progress-container">
+                    <span id="progress-text">Questão 1 / 20</span>
+                    <div class="progress-bar"><div id="progress-fill"></div></div>
+                </div>
+            </div>
+
+            <div class="question-box" id="question-text">Carregando pergunta...</div>
+            
+            <div class="options-grid">
+                <div class="option-card" id="opt1">
+                    <span class="key-indicator indicator-orange">1</span>
+                    <span class="opt-text" id="opt1-text">Opção 1</span>
+                </div>
+                <div class="option-card" id="opt2">
+                    <span class="key-indicator indicator-purple">2</span>
+                    <span class="opt-text" id="opt2-text">Opção 2</span>
+                </div>
+            </div>
+
+            <p class="tip-text">Pressione as teclas [1] ou [2] do teclado para responder!</p>
+        </div>
+    </div>
+
+    <div id="gameover-screen" class="screen hidden">
+        <div class="gameover-container view-card pop-animation">
+            <h1 class="neon-red-text structural-title">💥 GAME OVER</h1>
+            <p class="defeat-msg">Não foi dessa vez! A ortografia precisa estar impecável para vencer o bullying.</p>
+            <div class="cooldown-bar-wrapper"><div class="cooldown-bar-fill" id="defeat-cooldown"></div></div>
+            
+            <div class="leaderboard-fullscreen">
+                <h3>🥇 Últimos Pró Players</h3>
+                <div class="players-grid large-slots" id="leaderboard-list-defeat">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="victory-screen" class="screen hidden">
+        <div class="victory-container view-card pop-animation">
+            <h1 class="neon-green-text structural-title">🏆 VOCÊ VENCEU!</h1>
+            <p class="victory-msg">Sua ortografia é excelente e você disse NÃO ao bullying!</p>
+            
+            <div id="camera-area">
+                <div id="countdown-overlay" class="hidden">5</div>
+                <video id="webcam" autoplay playsinline></video>
+                <canvas id="capture-canvas" width="320" height="240"></canvas>
+            </div>
+
+            <div id="pose-instruction">
+                <h2 class="neon-gold-text">PREPARE SUA POSE DE PRO PLAYER!</h2>
+                <p class="sub-pose-text">A foto será tirada automaticamente em instantes...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="leaderboard-section" class="hidden">
+        <div class="leaderboard-container view-card">
+            <h3>🎮 Últimos Pró Players</h3>
+            <div class="players-grid" id="leaderboard-list-main">
+                </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
